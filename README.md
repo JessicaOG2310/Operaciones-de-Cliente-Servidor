@@ -1,94 +1,105 @@
-# Operaciones-de-Cliente-Servidor
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Scanner;
 
-public class ClienteSuma {
+public class ServidorSuma {
+    private ArrayList<Double> Numeros = new ArrayList<>();
     static Scanner lector = new Scanner(System.in);
 
-    public ClienteSuma() {
-        System.out.println("Cliente corriendo");
-        try {
-            Socket sc = new Socket("localhost", 5050);
-            DataInputStream dis = new DataInputStream(sc.getInputStream());
-            DataOutputStream dos = new DataOutputStream(sc.getOutputStream());
+    public ServidorSuma() throws IOException {
+        ServerSocket ss = new ServerSocket(5050);
+        Socket s = ss.accept();
+        DataInputStream dis = new DataInputStream(s.getInputStream());
+        DataOutputStream dos = new DataOutputStream(s.getOutputStream());
 
-            int opcion;
-            do {
-                System.out.println(dis.readUTF()); // Elija la operacion que desea realizar:
-                System.out.println(dis.readUTF()); // 1. Suma de numeros
-                System.out.println(dis.readUTF()); // 2. Seno de un numero
-                System.out.println(dis.readUTF()); // 3. Coseno de un numero
-                System.out.println(dis.readUTF()); // 4. Raiz cuadrada de un numero
-                System.out.println(dis.readUTF()); // 5. Elevar una base a una potencia
-                System.out.println(dis.readUTF()); // 6. Salir del programa
+        System.out.println("Servidor iniciado");
+        int opcion;
+        do {
+            dos.writeUTF("Elija la operacion que desea realizar:");
+            dos.writeUTF("1. Suma de numeros");
+            dos.writeUTF("2. Seno de un numero");
+            dos.writeUTF("3. Coseno de un numero");
+            dos.writeUTF("4. Raiz cuadrada de un numero");
+            dos.writeUTF("5. Elevar una base a una potencia");
+            dos.writeUTF("6. Salir del programa");
+            dos.flush();
 
-                System.out.print("Ingrese su opcion: ");
-                opcion = lector.nextInt();
-                dos.writeInt(opcion);
-                dos.flush();
+            opcion = dis.readInt();
 
-                switch (opcion) {
-                    case 1:
-                        System.out.println(dis.readUTF()); // ¿Cuantos numeros desea enviar para que se sumen?
-                        int cantidad = lector.nextInt();
-                        dos.writeInt(cantidad);
+            switch (opcion) {
+                case 1:
+                    dos.writeUTF("¿Cuantos numeros desea enviar para que se sumen?");
+                    dos.flush();
+                    int cantidad = dis.readInt();
+                    double suma = 0;
+                    for (int i = 0; i < cantidad; i++) {
+                        dos.writeUTF("Ingrese un numero: ");
                         dos.flush();
-                        for (int i = 0; i < cantidad; i++) {
-                            System.out.println(dis.readUTF()); // Ingrese un numero:
-                            double num = lector.nextDouble();
-                            dos.writeDouble(num);
-                            dos.flush();
-                        }
-                        System.out.println(dis.readUTF()); // La suma es:
-                        break;
-                    case 2:
-                        System.out.println(dis.readUTF()); // Ingresa el valor del angulo en grados:
-                        double grados = lector.nextDouble();
-                        dos.writeDouble(grados);
-                        dos.flush();
-                        System.out.println(dis.readUTF()); // Seno:
-                        break;
-                    case 3:
-                        System.out.println(dis.readUTF()); // Ingresa el valor del angulo en grados:
-                        double gradoss = lector.nextDouble();
-                        dos.writeDouble(gradoss);
-                        dos.flush();
-                        System.out.println(dis.readUTF()); // Coseno:
-                        break;
-                    case 4:
-                        System.out.println(dis.readUTF()); // Ingrese un numero:
-                        int numRaiz = lector.nextInt();
-                        dos.writeInt(numRaiz);
-                        dos.flush();
-                        System.out.println(dis.readUTF()); // Raiz cuadrada 
-                        break;
-                    case 5:
-                        System.out.println(dis.readUTF()); // Escriba el numero que sera la base:
-                        double base = lector.nextDouble();
-                        dos.writeDouble(base);
-                        dos.flush();
-                        System.out.println(dis.readUTF()); // Escriba a que potencia sera elevada:
-                        double potencia = lector.nextDouble();
-                        dos.writeDouble(potencia);
-                        dos.flush();
-                        System.out.println(dis.readUTF()); // El resultado es:
-                        break;
-                    default:
-                        System.out.println(dis.readUTF()); // Opcion invalida
-                        break;
-                }
-            } while (opcion != 6);
+                        double num = dis.readDouble();
+                        Numeros.add(num);
+                        suma += num;
+                    }
+                    dos.writeUTF("La suma es: " + suma);
+                    dos.flush();
+                    Numeros.clear();
+                    break;
+                case 2:
+                    dos.writeUTF("Ingresa el valor del angulo en grados: ");
+                    dos.flush();
+                    double grados = dis.readDouble();
+                    double radianes = grados * Math.PI / 180;
+                    double seno = Math.sin(radianes);
+                    dos.writeUTF("Seno: " + seno);
+                    dos.flush();
+                    break;
+                case 3:
+                    dos.writeUTF("Ingresa el valor del angulo en grados: ");
+                    dos.flush();
+                    double gradoss = dis.readDouble();
+                    double radianess = gradoss * Math.PI / 180;
+                    double coseno = Math.cos(radianess);
+                    dos.writeUTF("Coseno: " + coseno);
+                    dos.flush();
+                    break;
+                case 4:
+                    dos.writeUTF("Ingrese un numero: ");
+                    dos.flush();
+                    int numRaiz = dis.readInt();
+                    double raiz = Math.sqrt(numRaiz);
+                    dos.writeUTF("Raiz cuadrada del " + numRaiz + " es: " + raiz);
+                    dos.flush();
+                    break;
+                case 5:
+                    dos.writeUTF("Escriba el numero que sera la base: ");
+                    dos.flush();
+                    double base = dis.readDouble();
+                    dos.writeUTF("Escriba a que potencia sera elevada: ");
+                    dos.flush();
+                    double potencia = dis.readDouble();
+                    double resultado = Math.pow(base, potencia);
+                    dos.writeUTF("El resultado es: " + resultado);
+                    dos.flush();
+                    break;
+                default:
+                    dos.writeUTF("Opcion invalida");
+                    dos.flush();
+                    break;
+            }
+        } while (opcion != 6);
 
-            sc.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        ss.close();
+        s.close();
     }
 
     public static void main(String[] args) {
-        new ClienteSuma();
+        try {
+            new ServidorSuma();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
